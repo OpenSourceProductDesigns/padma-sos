@@ -38,6 +38,7 @@ Status: `draft`
 | OQ-14 | How do 112 operators handle **silent calls**? Many centres hang up on silence; the announcement must come immediately and maybe repeat | Open. Ask ERSS / Delhi Police |
 | ~~OQ-15~~ | ~~Which keyword(s)?~~ | **Answered:** a **personal code phrase**, enrolled per wearer and accepted only in the **wearer's voice** (speaker verification, like "Hey Google" voice match). Revisit if the chosen hardware cannot do it within the power budget (FR-002, R-08) |
 | ~~OQ-16~~ | ~~Keep an IMU?~~ | **Answered: yes.** Fall / struggle detection, and confirmation of voice triggers (FR-006) |
+| OQ-17 | **112 callbacks:** which number(s) do ERSS operators call back from, and is caller ID reliable? This decides which incoming calls the device auto-answers (FR-028) and how long T_callback should be | Open. Ask ERSS / Delhi Police together with OQ-14 |
 
 ## Risks
 

@@ -20,7 +20,7 @@ hardware/
   enclosure/      Enclosure CAD (future)
 firmware/         Device firmware
 tools/            Developer helper scripts (e.g. datasheet PDF → Markdown)
-docs/             Requirements, architecture, bring-up guides
+docs/             Requirements, architecture, research notes, bring-up guides
 ```
 
 ## License

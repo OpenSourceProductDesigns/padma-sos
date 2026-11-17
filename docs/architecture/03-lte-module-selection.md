@@ -47,7 +47,10 @@ Decided 2026-11-05: **use non-Chinese module vendors. Quectel is the one excepti
 | Trasna (ex-u-blox) LENA-R8001-01C | ? | 1 bis + 2G | ✅ FDD B1/3/5/8 (+2/4/7/12/20/28/66) · TDD B38/40/41 (global) | ✅ VoLTE + CSFB, **only from the "01C" version**; "00C" is call setup without audio (EOL) | ✅ I²S / PCM, 4-wire (01C only) | **30.0 × 27.0** | **3 µA** PSM deep sleep (01C) | ? | Reject: too big. The M10 variant's built-in GNSS is L1-only (no NavIC) |
 | Trasna ADAM-R11 | ? | 1 bis | ✅ R11001D: B1/3/5/8 + TDD B34/38/39/40/41 | ❌ "data-only" | ❌ I²S row empty | 18.0 × 18.0 | 4 µA deep sleep | ✅ SGP.32 ready, internal eSIM option | Reject: data-only |
 | Trasna LEXI-R10 | ? | 1 bis | ? not checked (no voice, so moot) | ❌ "data-only" | ❌ I²S row empty | **16 × 16** (smallest Cat 1 bis) | 2 µA hibernate · 10 µA eDRX | ✅ SGP.32 ready, LPAd | Reject: data-only. Watch for a voice variant |
-| Cavli C16QS-IN-GNAH | QCX216 class | 1 bis | ✅ B1/3/5/8/40/41 | ❌ no VoLTE (confirmed by the user) | ⚠ I²S ×1 "requires SDK" | 26.5 × 22.5 × 2.3 | 11 µA hibernate | ✅ integrated eSIM | Reject: no VoLTE, and big. Indian vendor, so keep in view |
+| Cavli C16QS-IN-GNAH | Qualcomm QCX216 (Cavli case study) | 1 bis | ✅ B1/3/5/8/40/41 | ❌ no VoLTE (confirmed by the user; no voice in the spec) | ⚠ I²S ×1 "requires SDK" | 26.5 × 22.5 × 2.3 | 11 µA hibernate | ✅ integrated eSIM | Reject: no VoLTE, and big. Indian vendor, so keep in view |
+| Cavli P16QS | Qualcomm (RISC-V MCU at 325 MHz, 8 MB pSRAM, 16 / 32 MB flash) | 1 bis (Rel 14) | ✅ IN: B1/3/5/8/40/41 (the web page adds B38) | ⚠ web page lists "VoLTE Support" and SMS over IMS; brochure does not mention voice; 112 not stated | ⚠ I²S ×1, 2× audio ADC, 1× audio DAC; use in a VoLTE call not stated | **40.0 × 30.0 × 2.7** LGA | ? not stated | ⚠ optional integrated eSIM; SGP.32 not stated | Reject: too big (a POS / payment module with Wi-Fi 6, BLE 5.4, card reader, NFC). GNSS has no NavIC. Label says "Made in India". Shows Cavli has VoLTE on Cat 1 bis |
+| **Cavli CQ16-IN** | ? (Cortex-M3 @ 204 MHz, 4 MB flash + 1.25 MB RAM: same as C16QS, so probably QCX216) | 1 bis (Rel 14) | ✅ IN: B1/3/5/8/40/41 | ⚠ "VoLTE Support" **only on the web page**; spec V1.1 and brochure V1.4 list no voice (only "SMS-SG") | ⚠ I²S ×1, "Needs SDK" | **17.7 × 15.8 × 2.5** LGA | TBD in spec | ⚠ optional integrated eSIM; SGP.32 not stated | **Ask the vendor.** Small, India variant, "Made in India", 2 SIM slots (brochure). Certifications (pre-release): CE, UKCA, GCF, ICASA; no TEC / WPC. Second-source candidate only if Cavli confirms VoLTE + 112 + I²S in calls |
+| Cavli C17QS | ? (dual Cortex-M3 @ 306 MHz, 2 MB RAM + 8 MB flash) | 1 bis (Rel 14) | ⚠ "Global" variant only: B1/3/5/8/40/41 among many bands | ❌ no voice in spec V1.3 (pre-release) | ⚠ I²S ×1 | 26.5 × 22.5 × 2.3 | TBD in spec | ? | Reject: no VoLTE stated, and big. Optional GNSS lists **NavIC**. No India certification (GCF, CE, FCC, PTCRB, …) |
 | Nordic nRF93M1-LABA | Nordic (in-house) | 1 bis (Rel 14) | ✅ LABA: FDD B1/3/5/7/8/20/28 · TDD B38/40/41 | ❌ no voice, IMS or audio anywhere in datasheet v0.7 | ❌ none (UART, USB, SIM, GPIO only) | ~17.7 × 15.8 × 2.4 LGA | ? (PSM / eDRX supported) | ✅ SGP.02 / .22 / .32 | Reject: data-only |
 
 ## Vendor coverage
@@ -59,7 +62,7 @@ Screened one vendor at a time, from that vendor's own datasheets, briefs or broc
 | Quectel (China, policy exception) | ✅ done (EG915U, EG912U, EC200U specs) | **EG915U-CN** (the only Quectel part with India bands, VoLTE, PCM and a usable size) |
 | Telit Cinterion (Italy / US) | ✅ product briefs screened (ELS62, ELS63, LE910R1) | **ELS62-I**. Size and sleep current need the datasheet (Telit download zone, free registration) |
 | Trasna, ex-u-blox cellular (since 2025) | ✅ data sheets screened (LENA-R8, ADAM-R11, LEXI-R10) | None. Only LENA-R8 has voice, and it is 30 × 27 mm. ADAM / LEXI are small but data-only |
-| Cavli (India) | ✅ checked (the local PDF is image-only, so it was not grep-screened; no VoLTE is the user's finding) | None: no VoLTE. Re-check if Cavli adds it (Indian vendor, integrated eSIM) |
+| Cavli (India) | ⚠ **reopened 2026-11-17.** The first pass (2026-11-05) only covered one part. `Cavli/file.pdf` turned out to be the **CQ16 brochure V1.4**, not a C16QS document. Now OCR-converted and screened: C16QS, CQ16, C17QS specs, P16QS brochure, SOS case study | None confirmed. C16QS and C17QS have no voice. P16QS claims VoLTE but is 40 × 30 mm. **CQ16-IN** (17.7 × 15.8 mm) claims VoLTE only on its web page: **ask Cavli**. If confirmed, it would be a strong second source (Indian vendor, made in India). CQM211 / AQ62 are 5G modules, out of scope |
 | Nordic (Norway) | ✅ nRF93M1 datasheet v0.7 screened | None: Cat 1 bis with India bands, but data-only |
 | Sequans (France) | ✅ checked by the user | None: no Cat 1 bis module with VoLTE. Would be considered if VoLTE were not a gate |
 | Semtech / Sierra Wireless, Murata | not screened (search closed) | Their portfolios are mostly Cat M / NB-IoT |
@@ -72,8 +75,8 @@ Screened one vendor at a time, from that vendor's own datasheets, briefs or broc
 
 1. **Lead: Quectel EG915U-CN.** It is the only part whose own spec sheet confirms all three gates: India bands (the variant is labelled "China / India"), **VoLTE**, and a **PCM** digital audio port. It also has an analog mic input as a fallback, and an eSIM row. Its weakness is size (23.6 × 19.9 mm, about 25 % of the 46 × 39 mm footprint). Its 1.2 mA at PF = 256 fits the power budget's option (a) estimate (0.8–3.0 mA).
 2. **Second source: Telit ELS62-I.** It is the only non-Quectel part with an India variant, VoLTE and PCM / I²S on paper. Its brief gives no size or sleep current, and it lists no India approval. A second source matters for supply risk, so get its datasheet.
-3. **Rejected for missing VoLTE** even though they have India bands: Telit ELS63-I, Trasna ADAM-R11 / LEXI-R10, Cavli C16QS, Nordic nRF93M1. The small ones (LEXI-R10 at 16 × 16 mm, nRF93M1 at ~17.7 × 15.8 mm) are worth re-checking if their vendors add VoLTE.
-4. **Rejected for size** (VoLTE and digital audio present): Quectel EC200U-CN (31 × 28) and EG912U (29 × 25), Telit LE910R1 (28 × 28), Trasna LENA-R8 (30 × 27).
+3. **Rejected for missing VoLTE** even though they have India bands: Telit ELS63-I, Trasna ADAM-R11 / LEXI-R10, Cavli C16QS / C17QS, Nordic nRF93M1. (Cavli CQ16-IN is pending: VoLTE claimed only on its web page.) The small ones (LEXI-R10 at 16 × 16 mm, nRF93M1 at ~17.7 × 15.8 mm) are worth re-checking if their vendors add VoLTE.
+4. **Rejected for size** (VoLTE and digital audio present): Quectel EC200U-CN (31 × 28) and EG912U (29 × 25), Telit LE910R1 (28 × 28), Trasna LENA-R8 (30 × 27), Cavli P16QS (40 × 30).
 
 **Next step:** buy an EVB for the **EG915U-CN** and run the A-04 test from the block diagram first: a VoLTE call on Jio and Airtel in Delhi with PCM audio injected into the uplink and the downlink muted. Use a test number first, then a coordinated 112 test call.
 
@@ -130,3 +133,7 @@ Local copies of vendor documents are in `hardware/datasheets/<Vendor>/` (git-ign
 
 **Cavli**
 - C16QS: <https://www.cavliwireless.com/c-series/c16qs.html>, spec V2.7 <https://shop.mev-elektronik.com/wp-content/uploads/C16QS-Cat1.bis-Technical-Specification-Document-V2.7.pdf>
+- CQ16: spec V1.1 and brochure V1.4 (local copies, OCR-converted; the brochure is `Cavli/file.pdf`) · page <https://www.cavliwireless.com/iot-modules/c-series/cq16>
+- C17QS: spec V1.3, pre-release (local copy, OCR-converted)
+- P16QS: product brochure (local copy `Cavli/P16QS.pdf`, OCR-converted) · page <https://www.cavliwireless.com/iot-modules/c-series/p16qs>
+- Case study "Emergency SOS & Telematics" (local copy): an Indian care-tech customer uses the C16QS for **data-based** SOS alerts (location to responders and contacts), not voice calls. It confirms the C16QS uses the Qualcomm QCX216

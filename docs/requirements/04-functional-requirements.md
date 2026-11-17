@@ -38,6 +38,7 @@ Status: `draft`. Values marked **TBD** get fixed once size and battery trade-off
 | FR-025 | The device should also send an **SMS to 112** with location when SOS starts (no extra hardware; OQ-02). | S | UC-07 |
 | FR-026 | An active SOS shall stop only when the **112 operator ends the call** or the wearer makes a **long press** on the device's input (OQ-11). Nothing else shall stop it. | M | UC-08 |
 | ~~FR-027~~ | ~~SMS to trusted contacts~~: dropped for v1. | W | UC-11 |
+| FR-028 | While an SOS is active, and for T_callback (TBD) after its call ends, the device should **auto-answer an incoming call from 112 / ERSS silently** (no ring, no vibration), replay the announcement (FR-021) and stream the mic as in FR-022. Other callers are not answered (OQ-17). | S | UC-08 |
 
 ## Location
 
