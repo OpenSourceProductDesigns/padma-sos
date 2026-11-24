@@ -93,6 +93,25 @@ Both are plan B. Neither is a reason to pick a module without PCM.
 
 Note: "audio playback / recording" is **not** VoLTE. It only plays into calls the module can already make. VoLTE support is a separate row in the brochure.
 
+## EG915U-CN hardware design notes
+
+From the **standard EG915U Series Hardware Design V1.0** (2022-01-05, `hardware/datasheets/Quectel/eg915u.md`), cross-checked against the QuecOpen version. Power, PCM, I²C, UART, (U)SIM and antenna pin numbers are the **same in both**.
+
+Extra points from the standard guide:
+- **Peak current per pin pair:** VBAT_RF needs up to **2.5 A**; VBAT_BB needs at least 1 A.
+- **PWRKEY (pin 15) and RESET_N (pin 17)** are active-low and sit in the **VBAT power domain**. The MCU should drive them through an open-drain transistor, not directly.
+- **VDD_EXT (pin 29)** outputs 1.8 V at up to 50 mA, for pull-ups and level-shifter references.
+- **ANT_BT/WIFI_SCAN (pin 56)** is a second RF port for Bluetooth / Wi-Fi scanning. Leave it open (no second antenna; see K8). Wi-Fi scan positioning is a possible later idea.
+
+| Topic | What the guide says | Consequence for Padma SOS |
+|---|---|---|
+| Supply | VBAT_BB (pins 32, 33) and VBAT_RF (pins 52, 53): **3.3–4.3 V**, 3.8 V typical. **Must never drop below 3.3 V** | Li-ion straight to VBAT (AD-07) works, but **the low-battery cut-off must account for droop during transmit bursts**. Usable capacity ends near 3.5 V at rest, not 3.0 V *(verify on EVB)* |
+| Peak current | Supply must deliver **≥ 2.0 A** with LTE only (≥ 3.0 A with GSM) | Needs a battery and protection circuit with low impedance, plus bulk capacitance. Check the battery's peak-current rating and the protection FET's resistance |
+| Decoupling | ~100 µF low-ESR (≤ 0.7 Ω) + 100 nF / 33 pF / 10 pF MLCCs close to each VBAT pair, star routing; TVS ≥ 4.7 V stand-off | Takes board area; plan room for it next to the module |
+| PCM | **Slave mode only.** Short-frame mode; PCM_SYNC = sample rate (8–44.1 kHz); 1–4 channels, but **only the first channel is used**. Pins: CLK 4, SYNC 5, DIN 6, DOUT 7 | **The MCU must be the PCM master** and generate CLK and SYNC. Fits AD-01 |
+| I/O level | PCM, I²C and UART-side signals are in the **1.8 V domain** | The MCU's I/O must run at 1.8 V, or level shifters are needed. Add to MCU selection criteria (OQ-10) |
+| I²C | If an audio codec sits on the module's I²C bus, no other device may share it | Not relevant: no codec (the MCU is the PCM master) |
+
 ## Open checks
 
 Ask the vendors these before ordering EVBs:

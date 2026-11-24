@@ -192,7 +192,7 @@ These are starting points for the shortlist, not selections. Each needs a datash
 |---|---|---|
 | LTE Cat 1 bis module | Quectel EG915U-CN (lead), Telit ELS62-I (second source); see [03-lte-module-selection.md](03-lte-module-selection.md) | India band variant (B1 / B3 / B5 / B8 / B40 / B41), VoLTE on Jio and Airtel, PCM / I²S audio in a VoLTE call, downlink mute, eSIM / LPA support, TEC MTCTE, idle current in DRX / eDRX / PSM, size |
 | GNSS receiver | Airoha AG3335-based modules (e.g. Quectel LC29H / LC76G families) | NavIC L5 actually enabled on that variant, BeiDou can be switched off, hot-start current, size |
-| MCU | Alif Ensemble E1 / E3 (Cortex-M55 + Ethos-U55, low-power + high-performance cores) | Always-on current with keyword spotting, USB FS, SRAM for speaker verification, package size, open toolchain |
+| MCU | Alif Ensemble E1 / E3 (Cortex-M55 + Ethos-U55, low-power + high-performance cores) | Always-on current with keyword spotting, USB FS, SRAM for speaker verification, package size, open toolchain, **1.8 V I/O** (modem PCM and UART are 1.8 V), **I²S/PCM master** (modem PCM is slave-only) |
 | Microphone | Low-power PDM MEMS mics with a sound-detect / wake mode | Low-power-mode current, SNR, IP-rated acoustic membrane |
 | IMU | ST LSM6DSO-class (motion wake, on-chip ML core) | Current in wake-on-motion mode |
 | Charger / PMIC | TI BQ2512x-class wearable PMIC | Integrated buck / LDO, ship mode, quiescent current |
