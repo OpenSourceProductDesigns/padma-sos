@@ -16,6 +16,10 @@ These notes are **background, not decisions**. Decisions live in the architectur
 8. [APN (Access Point Name)](#8-apn-access-point-name)
 9. [VoLTE call vs SMS for an SOS](#9-volte-call-vs-sms-for-an-sos)
 10. [Radio certifications (CE, FCC, India)](#10-radio-certifications-ce-fcc-india)
+11. [LTE Cat 1 vs Cat 1 bis, and why VoLTE depends on the chipset](#11-lte-cat-1-vs-cat-1-bis-and-why-volte-depends-on-the-chipset)
+12. [Does the MCU need an NPU?](#12-does-the-mcu-need-an-npu)
+13. [Open-source hardware: licenses and OSHWA certification](#13-open-source-hardware-licenses-and-oshwa-certification)
+14. [Testing prototypes: where, and what not to do](#14-testing-prototypes-where-and-what-not-to-do)
 
 ---
 
@@ -221,3 +225,125 @@ A certification proves a radio product:
 | **Jio / Airtel approval** | Operators (commercial) | Works on their network, especially **VoLTE / 112** |
 
 **Ask module vendors for:** MTCTE and WPC ETA for the exact variant, Jio / Airtel VoLTE and 112 testing, and reusable test reports. **Before certifying the product**, confirm the current rules with a TEC-designated lab, because they change often.
+
+## 11. LTE Cat 1 vs Cat 1 bis, and why VoLTE depends on the chipset
+
+**The difference is the number of receive antennas:**
+
+| | Cat 1 | Cat 1 bis |
+|---|---|---|
+| 3GPP release | Release 8 | **Release 13** |
+| Receive antennas | **2** (main + diversity) | **1** |
+| Peak speed | ~10 Mbit/s down / 5 up | Same |
+| Typical use | Older IoT, POS terminals, routers | Wearables, trackers, small IoT |
+
+**Diversity** means two antennas that receive the same signal. The modem combines them, which helps when one antenna is faded or blocked. Cat 1 **requires** it. Cat 1 bis was created so that small devices can drop the second antenna, at the cost of slightly worse reception.
+
+**Antenna count for Padma SOS:**
+
+| Option | LTE antennas | GNSS antenna | Total |
+|---|---|---|---|
+| Cat 1 bis | 1 | 1 | **2** |
+| Cat 1 | 2 | 1 | **3** |
+
+In a 46 × 39 mm wearable, every antenna needs space, clearance and tuning, and the body detunes them. Three antennas is very hard. Some Cat 1 modules can switch the diversity path off with a setting, but reception gets worse and operator acceptance can suffer. That is why K8 asks for Cat 1 bis.
+
+**"Cat 1 bis" says nothing about voice.** Whether a module has VoLTE depends mostly on the **chipset and the vendor's firmware**:
+
+| Chipset family | Designed for | VoLTE? | Example modules |
+|---|---|---|---|
+| UNISOC 8910DM | Low-cost feature phones (China) | ✅ Built in | Quectel EG915U, EC200U |
+| Qualcomm QCX216 | IoT data (meters, trackers) | ❌ Usually left out | Cavli C16QS / CQ16 *(chipset: verify)* |
+| Nordic, Sequans, Trasna LEXI / ADAM | IoT data | ❌ | nRF93M1, LEXI-R10 |
+
+**Example:** Cavli confirmed (2026-11-24) that **none of its Cat 1 bis modules support VoLTE, only its Cat 1 modules**. Other vendors (Quectel, Telit, Trasna LENA-R8) do offer Cat 1 bis with VoLTE.
+
+**Lesson:** "VoLTE support" on a web page is not proof. Check the spec sheet, and ask the vendor in writing.
+
+## 12. Does the MCU need an NPU?
+
+**An NPU (neural processing unit)** is a small hardware accelerator for neural networks, such as Arm's **Ethos-U55**. It does the multiply-accumulate work of a model much faster, and with **much less energy per inference**, than the CPU.
+
+**Not strictly required. It depends on what has to run *always on*.** Split the audio workload into two parts:
+
+| Task | When it runs | Typical model size | Can a plain Cortex-M4F / M33 do it? |
+|---|---|---|---|
+| **Keyword spotting** (e.g. a code word) | **Always on** | Tens of kB, a few M-ops per inference *(verify)* | ✅ Yes, the classic MCU workload |
+| **Scream / sound-event detection** | Always on | Similar to keyword spotting | ✅ Usually |
+| **Speaker verification** (is it the wearer?) | Only **after** a trigger | Hundreds of kB to MB, 10–100× more compute *(verify)* | ⚠ Possible but slow; latency and SRAM are the risk |
+
+**Why the "always on" part decides it:**
+- **Battery life** is set by the always-on current, not by the occasional burst. An NPU runs the same model at a fraction of the energy, so it makes always-on listening cheaper.
+- **Burst work**, such as speaker verification after a keyword, only costs **latency**. Taking 1 s instead of 0.1 s on an M33 may be acceptable *(verify by benchmark)*.
+
+**Cortex-M55 with Helium.** Helium is the M55's vector (SIMD) extension. It speeds up DSP and ML several times over an M4, even **without** an NPU *(verify factor)*. An M55 + Ethos-U55 part (e.g. **Alif Ensemble E1 / E3**) gives both.
+
+**When an NPU becomes necessary:**
+- Speaker verification must run **continuously**, or must be **fast**
+- Models grow (better accuracy, more keywords, noise robustness)
+- The always-on current budget is too tight for the CPU alone
+
+**Recommended way to decide (OQ-10 / OQ-15):** benchmark the same keyword and speaker models on two dev kits, measuring:
+- always-on current (µA)
+- latency
+- SRAM use
+
+| Kit | Class |
+|---|---|
+| Cortex-M33 (e.g. STM32U5, nRF54) | No NPU |
+| Alif Ensemble E1 / E3 | M55 + Ethos-U55 |
+
+## 13. Open-source hardware: licenses and OSHWA certification
+
+**Open-source hardware (OSHW)** means anyone may study, modify, make **and sell** the design. The definition comes from the **Open Source Hardware Association (OSHWA)**.
+
+**What has to be published, and under which license:**
+
+| Part | What to publish | Typical licenses |
+|---|---|---|
+| Hardware | **Editable source files** (KiCad project, not just PDFs or Gerbers), bill of materials, enclosure CAD | CERN-OHL (-P / -W / -S), CC-BY, CC-BY-SA |
+| Firmware you write | Source code | MIT, BSD, Apache-2.0, GPL |
+| Documentation | Build and assembly instructions | CC-BY, CC-BY-SA |
+
+**"Non-commercial" licenses (CC-BY-NC) are not open source hardware.** Selling must be allowed.
+
+**OSHWA certification:**
+- **Free, self-certified online.** Nobody inspects or tests the product.
+- You get a **unique ID** (country code + number, e.g. `NL000123`), the right to use the **OSHW logo**, and a listing in the public directory.
+- **It is a promise.** OSHWA can withdraw the label if the design isn't actually open.
+- **It is not a safety or regulatory certification.** CE, TEC MTCTE, WPC and the rest are still needed (section 10).
+- **Bought parts may be closed.** The LTE module and its firmware are proprietary, and that is allowed. Certification covers what *you* design.
+
+**Hybrid model: open hardware, closed product.**
+- The board and enclosure are released openly. The firmware, app and services stay closed.
+- This is legitimate, and many companies do it, **but it cannot be OSHWA certified**, because certification needs the firmware you write to be open as well.
+
+**Licensing traps while undecided:**
+- **Publishing is one-way.** A version released under an open license can't be taken back. Keep the repo private until the decision is made.
+- **GPL is "copyleft".** GPL code linked into your firmware forces the firmware to be GPL. Prefer MIT, BSD or Apache libraries (Zephyr and most vendor SDKs are fine) to keep both options open.
+- **CERN-OHL variants:** -P (permissive), -W (weakly reciprocal), -S (strongly reciprocal, like GPL for hardware).
+
+## 14. Testing prototypes: where, and what not to do
+
+**Where, by kind of work:**
+
+| Work | Typical place | Equipment needed |
+|---|---|---|
+| Soldering, rework, quick fixes | Hackerspace (e.g. **RevSpace**, Den Haag / Leidschendam) or own bench | Soldering station, hot air, microscope, fume extraction |
+| Electrical measurements | Company lab | Oscilloscope, bench supply, logic analyser |
+| **Current profiling** (sleep µA to call peaks) | Company lab | Nordic PPK2, Qoitech Otii, or a source-measure unit |
+| RF and antenna tuning | Company lab or university (TU Delft) | Spectrum analyser, **VNA** (vector network analyser) |
+| Pre-compliance (EMC, emissions) | University or test house | Near-field probes, EMC receiver, shielded room |
+| Network and call tests | Test house or operator lab | **Network simulator** (call box), e.g. R&S CMW / Anritsu |
+
+**Hackerspaces are good for building and for advice. They rarely have RF equipment.**
+
+**Never make real 112 test calls on a live network.**
+- Test calls tie up real emergency dispatchers, and in most countries that is an offence or at least unwelcome.
+- Test the call flow with an **ordinary phone number**.
+- Test the **IMS emergency procedure** (section 7) on a **network simulator**, which can pretend to be an operator, including the emergency connection, or in a test arranged with the operator or ERSS.
+
+**Check that the bands overlap before buying a local SIM.**
+- The modules are chosen for **Indian** bands (B1 / B3 / B5 / B8 / B40 / B41).
+- The Netherlands mainly uses B1 / B3 / B7 / B8 / B20 / B28 *(verify per operator)*.
+- The overlap (B1, B3, B8) is enough for bench tests in Europe. Confirm against the module's band list first.
